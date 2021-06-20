@@ -23,7 +23,6 @@ enum BandType {
 
 class AudioVisualizer {
   // https://github.com/keijiro/unity-audio-spectrum/blob/master/AudioSpectrum.cs
-  final BandType bandType;
   final int sampleRate;
   final double zeroHzScale;
   final double fallSpeed;
@@ -109,21 +108,37 @@ class AudioVisualizer {
   late List<double> levels;
   late List<double> peakLevels;
   late List<double> meanLevels;
+  late final List<double> frequencies;
+  late final double bandwidth;
 
   AudioVisualizer({
     this.windowSize = 2048,
-    this.bandType = BandType.EightBand,
+    bandType = BandType.EightBand,
     this.sampleRate = 44100,
     this.zeroHzScale = 0.05,
     this.fallSpeed = 0.08,
     this.sensibility = 8.0,
   }) {
-    reset();
+    reset(middleFrequenciesForBands[bandType.index],
+        bandwidthForBands[bandType.index]);
   }
 
-  void reset() {
-    final band = middleFrequenciesForBands[bandType.index];
-    int bandSize = band.length;
+  AudioVisualizer.fromFrequenciesAndBandwidth(
+    frequencies,
+    bandwidth, {
+    this.windowSize = 2048,
+    this.sampleRate = 44100,
+    this.zeroHzScale = 0.05,
+    this.fallSpeed = 0.08,
+    this.sensibility = 8.0,
+  }) {
+    reset(frequencies, bandwidth);
+  }
+
+  void reset(List<double> frequencies, double bandwidth) {
+    this.frequencies = frequencies;
+    this.bandwidth = bandwidth;
+    int bandSize = frequencies.length;
     levels = List<double>.filled(bandSize, 0.0, growable: false);
     peakLevels = List<double>.filled(bandSize, 0.0, growable: false);
     meanLevels = List<double>.filled(bandSize, 0.0, growable: false);
@@ -140,9 +155,6 @@ class AudioVisualizer {
 
   List<double> transform(List<int> audio,
       {int minRange = 0, int maxRange = 255}) {
-    final frequencies = middleFrequenciesForBands[bandType.index];
-    final bandwidth = bandwidthForBands[bandType.index];
-
     // convert to complex number with power of two
     final input =
         FFT.from(audio.map((e) => e.toDouble()).toList(), padding: true);
