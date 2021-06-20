@@ -4,10 +4,9 @@ import 'dart:math' as math;
 import 'package:complex/complex.dart';
 
 class FFT {
-  static List<Complex?> transform(List<Complex?> input,
-      {bool inverse = false}) {
+  static List<Complex> transform(List<Complex> input, {bool inverse = false}) {
     if (input.length == 1) {
-      return <Complex?>[input[0]];
+      return <Complex>[input[0]];
     }
 
     final int length = input.length;
@@ -17,14 +16,9 @@ class FFT {
 
     final factorExp = (-2.0 * math.pi / length) * sign;
 
-    final Complex? elem = null;
-    final evens = List.filled(half, elem);
-    final odds = List.filled(half, elem);
-
-    for (int i = 0; i < half; i++) {
-      evens[i] = input[2 * i];
-      odds[i] = input[2 * i + 1];
-    }
+    final Complex elem = Complex(0, 0);
+    final evens = List.generate(half, (i) => input[2 * i]);
+    final odds = List.generate(half, (i) => input[2 * 1 + 1]);
 
     final evenResult = transform(evens, inverse: inverse);
     final oddResult = transform(odds, inverse: inverse);
@@ -32,14 +26,14 @@ class FFT {
     for (int k = 0; k < half; k++) {
       final factorK = factorExp * k;
       final oddComponent =
-          oddResult[k]! * Complex(math.cos(factorK), math.sin(factorK));
-      result[k] = evenResult[k]! + oddComponent;
-      result[k + half] = evenResult[k]! - oddComponent;
+          oddResult[k] * Complex(math.cos(factorK), math.sin(factorK));
+      result[k] = evenResult[k] + oddComponent;
+      result[k + half] = evenResult[k] - oddComponent;
     }
     return result;
   }
 
-  static List<Complex?> from(List<double> input,
+  static List<Complex> from(List<double> input,
       {bool padding = true, int? size}) {
     if (size != null)
       assert(size >= input.length && isPowerOfTwo(size),
@@ -54,7 +48,7 @@ class FFT {
     return output;
   }
 
-  static List<double?> padToSize(List<double> input, int size) {
+  static List<double> padToSize(List<double> input, int size) {
     final output = [
       for (int i = 0; i < size; i++) i >= input.length ? 0.0 : input[i]
     ];
